@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animasi Lirik Lagu dengan Kembang Api</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Romadhon&display=swap">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Romadhon', sans-serif;
+            position: relative;
+            color: white;
+            overflow: hidden;
+        }
+
+        video#backgroundVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+            z-index: -2;
+        }
+
+        #fireworksCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .lyrics-container {
+            text-align: center;
+            white-space: pre;
+            padding: 20px;
+            font-size: 3vw; /* Ukuran font responsif berdasarkan lebar layar */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 1;
+            color: #D4AF37; /* Warna emas kecoklatan */
+        }
+
+        .line {
+            display: block;
+            margin-bottom: 5px;
+            color: #D4AF37; /* Warna emas kecoklatan */
+        }
+
+        /* Media query untuk layar kecil */
+        @media (max-width: 768px) {
+            .lyrics-container {
+                font-size: 6vw; /* Ukuran font lebih besar untuk layar kecil */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .lyrics-container {
+                font-size: 8vw; /* Ukuran font lebih besar untuk layar sangat kecil */
+            }
+        }
+    </style>
+</head>
+<body>
+    <video id="backgroundVideo" autoplay muted loop>
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <canvas id="fireworksCanvas"></canvas>
+    <div class="lyrics-container" id="lyricsContainer"></div>
+    <script>
+        // Animasi Lirik Lagu
+        const lyrics = [
+            "Selamat Hari Raya Idulfitri 1446 H",
+            "Saat takbir berkumandang, hati kembali tenang",
+            "Saat maaf terucap, beban pun hilang",
+            "Mari bersihkan jiwa, eratkan silaturahmi",
+            "dan rayakan kemenangan dengan penuh kebahagiaan",
+            "Mohon maaf lahir dan batin, semoga berkah selalu mengiringi!"
+        ];
+
+        const delays = [0.5, 0.1, 0.6, 0.6, 0.6, 0.6];
+        const speeds = [0.10, 0.13, 0.13, 0.11, 0.12, 0.08];
+
+        function animateText(text, container, speed) {
+            return new Promise((resolve) => {
+                let i = 0;
+                function typeChar() {
+                    if (i < text.length) {
+                        container.innerHTML += text.charAt(i);
+                        i++;
+                        setTimeout(typeChar, speed * 1000);
+                    } else {
+                        resolve();
+                    }
+                }
+                typeChar();
+            });
+        }
+
+        async function singSong() {
+            const lyricsContainer = document.getElementById('lyricsContainer');
+            for (let i = 0; i < lyrics.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, delays[i] * 1000));
+                const lineContainer = document.createElement('span');
+                lineContainer.classList.add('line');
+                lyricsContainer.appendChild(lineContainer);
+                await animateText(lyrics[i], lineContainer, speeds[i]);
+            }
+        }
+
+        singSong();
+
+        // Animasi Kembang Api
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Firework {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.particles = [];
+                for (let i = 0; i < 50; i++) {
+                    this.particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
+
+            update() {
+                this.particles.forEach(particle => particle.update());
+            }
+
+            draw() {
+                this.particles.forEach(particle => particle.draw());
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 4 - 2;
+                this.speedY = Math.random() * 4 - 2;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= 0.02;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        const fireworks = [];
+
+        function createFirework() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height / 2;
+            const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            fireworks.push(new Firework(x, y, color));
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            fireworks.forEach((firework, index) => {
+                firework.update();
+                firework.draw();
+                if (firework.particles[0].alpha <= 0) {
+                    fireworks.splice(index, 1);
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        setInterval(createFirework, 500);
+        animate();
+    </script>
+</body>
+</html>
